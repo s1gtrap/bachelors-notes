@@ -48,6 +48,23 @@ let from_file filename =
   in
   parseRes
 
+let%test "cfg0" =
+  from_string Llparser.cfgeof "ret i64 0\n"
+  = ({ insns = []; terminator = Ret (I64, Some (IConst64 0L)) }, [])
+
+let%test "cfg1" =
+  from_string Llparser.cfgeof "%c = add i32 %a, %b\n ret i32 %c"
+  = ( {
+        insns =
+          [
+            ( Some (Symbol.symbol "c"),
+              Binop (Add, I32, Id (Symbol.symbol "a"), Id (Symbol.symbol "b"))
+            );
+          ];
+        terminator = Ret (I32, Some (Id (Symbol.symbol "c")));
+      },
+      [] )
+
 let%test "prog0" =
   from_string Llparser.prog "define i64 @zero () {\n ret i64 0\n}"
   = {

@@ -19,6 +19,7 @@
 %token <string> STRING  (* string literals *)
 
 %start <Ll.prog> prog
+%start <Ll.cfg> cfgeof
 %%
 
 %inline typed(X): t=ty x=X { (t,x) }
@@ -46,13 +47,17 @@ decls_rev:
   | ds=decls_rev t=tdecl
     { { ds with tdecls = t :: ds.tdecls }  }
 
+cfg: eb=entry_block bs=list(labeled_block) { (eb, bs) }
+
+cfgeof: c=cfg EOF { c }
+
 fdecl:
   | DEFINE t=ty l=GID
     LPAREN params=separated_list(COMMA,typed(UID)) RPAREN
-    LBRACE eb=entry_block bs=list(labeled_block) RBRACE
+    LBRACE cfg=cfg RBRACE
     { (l, { fty = (List.map fst params, t)
           ; param = List.map snd params
-          ; cfg = (eb, bs)
+          ; cfg = cfg
           }
     ) }
 
