@@ -125,8 +125,8 @@ let sot = string_of_ty
 let string_of_operand (opr : operand) : string =
   match opr with
   | Null -> "null"
-  | IConst64 i -> Int64.to_string i
-  | IConst32 i -> Int32.to_string i
+  | IConst64 i -> Int64.to_string i ^ "L"
+  | IConst32 i -> Int32.to_string i ^ "l"
   | IConst8 i -> string_of_int (Char.code i)
   | BConst b -> if b then "1" else "0"
   | Gid g -> "@" ^ S.name g
