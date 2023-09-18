@@ -1,6 +1,11 @@
-.PHONY: all
+TARGETS=helloworld printf collatz
 
-all: helloworld collatz
+.PHONY: all clean
+
+all: $(TARGETS)
+
+clean:
+	rm -rf $(TARGETS)
 
 %.o: %.ll
 	llc -filetype=obj $< -o $@
