@@ -1,6 +1,6 @@
 .PHONY: all
 
-all: helloworld
+all: helloworld collatz
 
 %.o: %.ll
 	llc -filetype=obj $< -o $@
