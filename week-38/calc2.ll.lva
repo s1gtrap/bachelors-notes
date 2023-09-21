@@ -1,0 +1,17 @@
+@formula = private constant [16 x i8] c"%d*%d+%d = %lu\0A\00"
+
+declare i32 @printf(i8*, ...)
+
+define void @calc(i32 %a, i32 %b, i32 %c) { >-------------------------------------.
+    %x0 = mul i32 %a, %b >--------------------------------------------------------|--.
+    %x1 = add i32 %x0, %c >-----------------------------------------------------. |<-'
+    call i32 (i8*, ...) @printf(ptr @formula, i32 %a, i32 %b, i32 %c, i32 %x1)<-'-'
+    ret void
+}
+
+define i32 @main() {
+    call void @calc(i32 3, i32 2, i32 1)
+    call void @calc(i32 7, i32 3, i32 9)
+    call void @calc(i32 5, i32 15, i32 -6)
+    ret i32 0
+}
