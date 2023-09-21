@@ -1,4 +1,4 @@
-TARGETS=helloworld printf collatz-mut collatz-phi
+TARGETS=helloworld printf calc collatz-mut collatz-phi
 
 .PHONY: all clean
 
