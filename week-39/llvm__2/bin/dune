@@ -1,0 +1,4 @@
+(executable
+ (public_name llvm__2)
+ (name main)
+ (libraries llvm__2))
