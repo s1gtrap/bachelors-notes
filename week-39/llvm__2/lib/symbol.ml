@@ -33,3 +33,15 @@ let empty = ST.empty
 let enter (t, k, v) = ST.add k v t
 let look (t, k) = ST.find_opt k t
 let numItems = ST.cardinal
+
+let table_of_list (entries : (string * (int * int)) list) : (int * int) table =
+  let enter lva (k, v) = enter (lva, k, v) in
+  let symbol (s, (k, v)) = (symbol s, (k, v)) in
+  let entries = List.map symbol entries in
+  List.fold_left enter empty entries
+
+let%test "table_of_list" =
+  let eq a b = a == b in
+  let teq (a, b) = ST.equal eq a b in
+  List.for_all teq
+    [ (enter (empty, symbol "a", (1, 2)), table_of_list [ ("a", (1, 2)) ]) ]
