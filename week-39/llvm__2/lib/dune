@@ -1,6 +1,6 @@
 (library
  (name llvm__2)
- (libraries base stdio)
+ (libraries stdio)
  (inline_tests)
  (preprocess
   (pps ppx_inline_test)))

@@ -7,9 +7,7 @@ type symbol = string * int
 module H = Hashtbl
 
 let initHtSize = 1024
-
 let hashTable : (string, int) H.t = H.create initHtSize
-
 let nextsym = ref 0
 
 let symbol name =
@@ -17,8 +15,8 @@ let symbol name =
   | Some i -> (name, i)
   | None ->
       let i = !nextsym in
-      nextsym := i + 1 ;
-      H.add hashTable name i ;
+      nextsym := i + 1;
+      H.add hashTable name i;
       (name, i)
 
 let name (s, _) = s
@@ -32,9 +30,6 @@ end)
 type 'a table = 'a ST.t
 
 let empty = ST.empty
-
 let enter (t, k, v) = ST.add k v t
-
 let look (t, k) = ST.find_opt k t
-
 let numItems = ST.cardinal
