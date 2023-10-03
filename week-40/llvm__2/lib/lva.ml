@@ -86,3 +86,29 @@ let%test "lva_of_cfg { [a = 1 + 2; b = a + 3], Ret b }" =
   in
   S.equal
     (lva_of_cfg (blk, []), S.table_of_list [ ("a", (1, 2)); ("b", (2, 3)) ])
+
+let%test "lva_of_cfg { ([a = 0 + 1; b = a + 2], Br l), l: ([c = a + b], Ret c) \
+          }" =
+  let entry : Ll.block =
+    {
+      insns =
+        [
+          (Some (S.symbol "a"), Binop (Add, I32, IConst32 0l, IConst32 1l));
+          (Some (S.symbol "b"), Binop (Add, I32, Id (S.symbol "a"), IConst32 2l));
+        ];
+      terminator = Ret (I32, Some (Id (S.symbol "b")));
+    }
+  in
+  let exit : Ll.block =
+    {
+      insns =
+        [
+          ( Some (S.symbol "c"),
+            Binop (Add, I32, Id (S.symbol "a"), Id (S.symbol "b")) );
+        ];
+      terminator = Ret (I32, Some (Id (S.symbol "c")));
+    }
+  in
+  S.equal
+    ( lva_of_cfg (entry, [ (S.symbol "l", exit) ]),
+      S.table_of_list [ ("a", (1, 4)); ("b", (2, 4)); ("c", (4, 5)) ] )
