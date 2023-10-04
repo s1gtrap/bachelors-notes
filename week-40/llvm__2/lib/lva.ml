@@ -26,7 +26,10 @@ let lva_of_insn lva idx insn =
   in
   (l, idx + 1)
 
-let%test "lva_of_insn a = 1 + 2" =
+let%test "lva_of_insn0" =
+  (*
+    a = 1 + 2
+     *)
   let insn =
     (Some (S.symbol "a"), Ll.Binop (Add, I32, IConst32 1l, IConst32 2l))
   in
@@ -65,12 +68,19 @@ let lva_of_block lva idx ({ insns; terminator } : Ll.block) =
   let lva, idx = List.fold_left fold (lva, idx) insns in
   lva_of_term lva idx terminator
 
-let%test "lva_of_block { [], Ret }" =
+let%test "lva_of_block0" =
+  (*
+    ret
+    *)
   let blk : Ll.block = { insns = []; terminator = Ret (Void, None) } in
   let l, o = lva_of_block S.empty 0 blk in
   S.equal (l, S.table_of_list []) && o == 1
 
-let%test "lva_of_block { [a = 1 + 2], Ret a }" =
+let%test "lva_of_block1" =
+  (*
+    a = 1 + 2
+    ret a
+    *)
   let blk : Ll.block =
     {
       insns =
@@ -86,11 +96,18 @@ let lva_of_cfg (head, tail) =
   let fold (lva, off) (_, blk) = lva_of_block lva (off + 1) blk in
   fst (List.fold_left fold (lva, off) tail)
 
-let%test "lva_of_cfg { [], Ret }" =
+let%test "lva_of_cfg0" =
+  (*
+    ret
+    *)
   let blk : Ll.block = { insns = []; terminator = Ret (Void, None) } in
   S.equal (lva_of_cfg (blk, []), S.table_of_list [])
 
-let%test "lva_of_cfg { [a = 1 + 2], Ret a }" =
+let%test "lva_of_cfg1" =
+  (*
+    a = 1 + 2
+    ret a
+    *)
   let blk : Ll.block =
     {
       insns =
@@ -100,7 +117,12 @@ let%test "lva_of_cfg { [a = 1 + 2], Ret a }" =
   in
   S.equal (lva_of_cfg (blk, []), S.table_of_list [ ("a", (1, 2)) ])
 
-let%test "lva_of_cfg { [a = 1 + 2; b = a + 3], Ret b }" =
+let%test "lva_of_cfg2" =
+  (*
+    a = 1 + 2
+    b = a + 3
+    ret b
+    *)
   let blk : Ll.block =
     {
       insns =
