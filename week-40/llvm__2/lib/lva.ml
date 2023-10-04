@@ -96,7 +96,7 @@ let%test "lva_of_cfg { ([a = 0 + 1; b = a + 2], Br l), l: ([c = a + b], Ret c) \
           (Some (S.symbol "a"), Binop (Add, I32, IConst32 0l, IConst32 1l));
           (Some (S.symbol "b"), Binop (Add, I32, Id (S.symbol "a"), IConst32 2l));
         ];
-      terminator = Ret (I32, Some (Id (S.symbol "b")));
+      terminator = Br (S.symbol "l");
     }
   in
   let exit : Ll.block =
