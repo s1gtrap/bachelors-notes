@@ -26,7 +26,8 @@ let lva_of_term lva idx = function
   | Ll.Ret (_, None) -> (lva, idx + 1)
   | Ll.Ret (_, Some (Id s)) ->
       (S.enter (lva, s, (fst (Option.get (S.look (lva, s))), idx + 1)), idx + 1)
-  | _ -> failwith ""
+  | Ll.Br _ -> (lva, idx + 1)
+  | t -> failwith (Ll.string_of_terminator t)
 
 let%test "lva_of_term Ret a" =
   let term = Ll.Ret (I32, Some (Id (S.symbol "a"))) in
@@ -87,8 +88,14 @@ let%test "lva_of_cfg { [a = 1 + 2; b = a + 3], Ret b }" =
   S.equal
     (lva_of_cfg (blk, []), S.table_of_list [ ("a", (1, 2)); ("b", (2, 3)) ])
 
-let%test "lva_of_cfg { ([a = 0 + 1; b = a + 2], Br l), l: ([c = a + b], Ret c) \
-          }" =
+let%test "lva_of_cfg3" =
+  (*
+    a = 0 + 1
+    b = a + 2
+l:
+    c = a + b
+    ret c
+    *)
   let entry : Ll.block =
     {
       insns =
