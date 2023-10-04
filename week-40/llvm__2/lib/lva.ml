@@ -79,7 +79,7 @@ let%test "lva_of_block { [a = 1 + 2], Ret a }" =
 
 let lva_of_cfg (head, tail) =
   let lva, off = lva_of_block S.empty 0 head in
-  let fold (lva, off) (_, blk) = lva_of_block lva off blk in
+  let fold (lva, off) (_, blk) = lva_of_block lva (off + 1) blk in
   fst (List.fold_left fold (lva, off) tail)
 
 let%test "lva_of_cfg { [], Ret }" =
@@ -114,6 +114,7 @@ let%test "lva_of_cfg3" =
   (*
     a = 0 + 1
     b = a + 2
+    br l
 l:
     c = a + b
     ret c
@@ -140,4 +141,4 @@ l:
   in
   S.equal
     ( lva_of_cfg (entry, [ (S.symbol "l", exit) ]),
-      S.table_of_list [ ("a", (1, 4)); ("b", (2, 4)); ("c", (4, 5)) ] )
+      S.table_of_list [ ("a", (1, 5)); ("b", (2, 5)); ("c", (5, 6)) ] )
