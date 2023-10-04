@@ -4,3 +4,10 @@
  (inline_tests)
  (preprocess
   (pps ppx_inline_test)))
+
+(ocamllex lllexer)
+
+(menhir
+ (merge_into llparser)
+ (modules llparser)
+ (flags --explain))
