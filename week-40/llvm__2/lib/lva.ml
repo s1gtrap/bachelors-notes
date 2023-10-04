@@ -34,12 +34,27 @@ let lva_of_term lva idx = function
   | Ll.Ret (_, Some (Id s)) ->
       (S.enter (lva, s, (fst (Option.get (S.look (lva, s))), idx + 1)), idx + 1)
   | Ll.Br _ -> (lva, idx + 1)
+  | Ll.Cbr (Id cnd, _, _) ->
+      ( S.enter (lva, cnd, (fst (Option.get (S.look (lva, cnd))), idx + 1)),
+        idx + 1 )
+  | Ll.Cbr _ -> failwith "unreachable"
   | t -> failwith (Ll.string_of_terminator t)
 
-let%test "lva_of_term Ret a" =
+let%test "lva_of_term0" =
+  (*
+    Ret a
+    *)
   let term = Ll.Ret (I32, Some (Id (S.symbol "a"))) in
   let l, o = lva_of_term (S.table_of_list [ ("a", (1, -1)) ]) 1 term in
   S.equal (l, S.table_of_list [ ("a", (1, 2)) ]) && o == 2
+
+let%test "lva_of_term1" =
+  (*
+    cbr a, b, c
+    *)
+  let term = Ll.Cbr (Ll.Id (S.symbol "a"), S.symbol "b", S.symbol "c") in
+  let lva, off = lva_of_term (S.table_of_list [ ("a", (1, -1)) ]) 1 term in
+  S.equal (lva, S.table_of_list [ ("a", (1, 2)) ]) && off == 2
 
 let lva_of_block lva idx ({ insns; terminator } : Ll.block) =
   let fold (lva, idx) insn = lva_of_insn lva idx insn in
