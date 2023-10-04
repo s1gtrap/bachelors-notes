@@ -91,8 +91,8 @@ let%test "lva_of_block1" =
   let l, o = lva_of_block S.empty 0 blk in
   S.equal (l, S.table_of_list [ ("a", (1, 2)) ]) && o == 2
 
-let lva_of_cfg (head, tail) =
-  let lva, off = lva_of_block S.empty 0 head in
+let lva_of_cfg lva (head, tail) =
+  let lva, off = lva_of_block lva 0 head in
   let fold (lva, off) (_, blk) = lva_of_block lva (off + 1) blk in
   fst (List.fold_left fold (lva, off) tail)
 
@@ -101,7 +101,7 @@ let%test "lva_of_cfg0" =
     ret
     *)
   let blk : Ll.block = { insns = []; terminator = Ret (Void, None) } in
-  S.equal (lva_of_cfg (blk, []), S.table_of_list [])
+  S.equal (lva_of_cfg S.empty (blk, []), S.table_of_list [])
 
 let%test "lva_of_cfg1" =
   (*
@@ -115,7 +115,7 @@ let%test "lva_of_cfg1" =
       terminator = Ret (I32, Some (Id (S.symbol "a")));
     }
   in
-  S.equal (lva_of_cfg (blk, []), S.table_of_list [ ("a", (1, 2)) ])
+  S.equal (lva_of_cfg S.empty (blk, []), S.table_of_list [ ("a", (1, 2)) ])
 
 let%test "lva_of_cfg2" =
   (*
@@ -134,7 +134,8 @@ let%test "lva_of_cfg2" =
     }
   in
   S.equal
-    (lva_of_cfg (blk, []), S.table_of_list [ ("a", (1, 2)); ("b", (2, 3)) ])
+    ( lva_of_cfg S.empty (blk, []),
+      S.table_of_list [ ("a", (1, 2)); ("b", (2, 3)) ] )
 
 let%test "lva_of_cfg3" =
   (*
@@ -166,7 +167,7 @@ l:
     }
   in
   S.equal
-    ( lva_of_cfg (entry, [ (S.symbol "l", exit) ]),
+    ( lva_of_cfg S.empty (entry, [ (S.symbol "l", exit) ]),
       S.table_of_list [ ("a", (1, 5)); ("b", (2, 5)); ("c", (5, 6)) ] )
 
 let%test "lva_of_cfg4" =
@@ -218,8 +219,51 @@ f:
               (S.symbol "e", entry1); (S.symbol "l", loop); (S.symbol "f", exit);
             ] )));*)
   S.equal
-    ( lva_of_cfg
+    ( lva_of_cfg S.empty
         ( entry0,
           [ (S.symbol "e", entry1); (S.symbol "l", loop); (S.symbol "f", exit) ]
         ),
       S.table_of_list [ ("a0", (3, 6)); ("a1", (6, 7)); ("a2", (7, 10)) ] )
+
+let lva_of_fdecl ({ param; cfg; _ } : Ll.fdecl) =
+  let fold lva param = S.enter (lva, param, (0, -1)) in
+  let lva = List.fold_left fold S.empty param in
+  lva_of_cfg lva cfg
+
+let%test "lva_of_fdecl0" =
+  (*
+int noop(int v):
+    ret v
+    *)
+  let blk : Ll.block =
+    { insns = []; terminator = Ll.Ret (I32, Some (Id (S.symbol "v"))) }
+  in
+  let cfg : Ll.cfg = (blk, []) in
+  let fdecl : Ll.fdecl =
+    { fty = ([ I32; I32 ], I32); param = [ S.symbol "v" ]; cfg }
+  in
+  S.equal (lva_of_fdecl fdecl, S.table_of_list [ ("v", (0, 1)) ])
+
+let%test "lva_of_fdecl1" =
+  (*
+int add(a, b):
+    c = a + b
+    ret c
+    *)
+  let blk : Ll.block =
+    {
+      insns =
+        [
+          ( Some (S.symbol "c"),
+            Binop (Add, I32, Id (S.symbol "a"), Id (S.symbol "b")) );
+        ];
+      terminator = Ll.Ret (I32, Some (Id (S.symbol "c")));
+    }
+  in
+  let cfg : Ll.cfg = (blk, []) in
+  let fdecl : Ll.fdecl =
+    { fty = ([ I32; I32 ], I32); param = [ S.symbol "a"; S.symbol "b" ]; cfg }
+  in
+  S.equal
+    ( lva_of_fdecl fdecl,
+      S.table_of_list [ ("a", (0, 1)); ("b", (0, 1)); ("c", (1, 2)) ] )
