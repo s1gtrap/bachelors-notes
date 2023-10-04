@@ -12,7 +12,8 @@ let lva_of_insn lva idx insn =
     match insn with
     | d, Ll.Binop (_, _, a, b) -> ((def lva d |> use) a |> use) b
     | d, Alloca _ -> def lva d
-    | None, Ll.Store (_, v, p) -> use (use lva p) v
+    | d, Load (_, a) -> use (def lva d) a
+    | None, Store (_, v, p) -> use (use lva p) v
     | d, Icmp (_, _, a, b) -> ((def lva d |> use) a |> use) b
     | d, Bitcast (_, a, _) -> (def lva d |> use) a
     | d, Gep (_, head, tail) -> List.fold_left use (use (def lva d) head) tail
