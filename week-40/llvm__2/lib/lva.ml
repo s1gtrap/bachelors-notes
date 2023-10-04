@@ -11,7 +11,14 @@ let lva_of_insn lva idx insn =
   let l =
     match insn with
     | d, Ll.Binop (_, _, a, b) -> ((def lva d |> use) a |> use) b
-    | _ -> failwith ""
+    | d, Ll.PhiNode (_, ops) ->
+        let fold lva = function
+          | Ll.Id op, _ -> (
+              match S.look (lva, op) with Some _ -> lva | None -> lva)
+          | _ -> failwith "unreachable"
+        in
+        List.fold_left fold (def lva d) ops
+    | _, i -> failwith (Ll.string_of_insn i)
   in
   (l, idx + 1)
 
