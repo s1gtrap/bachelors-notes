@@ -13,13 +13,14 @@ let lva_of_insn lva idx insn =
     | d, Ll.Binop (_, _, a, b) -> ((def lva d |> use) a |> use) b
     | d, Alloca _ -> def lva d
     | d, Load (_, a) -> use (def lva d) a
-    | None, Store (_, v, p) -> use (use lva p) v
+    | _, Store (_, v, p) -> use (use lva p) v (* FIXME: okay to ignore lhs? *)
     | d, Icmp (_, _, a, b) -> ((def lva d |> use) a |> use) b
     | d, Call (_ty, _name, args) ->
         List.fold_left use (def lva d) (List.map snd args)
     | d, Bitcast (_, a, _) -> (def lva d |> use) a
     | d, Gep (_, head, tail) -> List.fold_left use (use (def lva d) head) tail
     | d, Zext (_, a, _) -> (def lva d |> use) a
+    | d, Ptrtoint (_fty, a, _tty) -> use (def lva d) a
     | d, PhiNode (_, ops) ->
         let fold lva = function
           | Ll.Id op, _ -> (
