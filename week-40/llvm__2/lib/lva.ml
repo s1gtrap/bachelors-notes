@@ -14,7 +14,11 @@ let lva_of_insn lva idx insn =
     | d, Ll.PhiNode (_, ops) ->
         let fold lva = function
           | Ll.Id op, _ -> (
-              match S.look (lva, op) with Some _ -> lva | None -> lva)
+              match S.look (lva, op) with
+              | Some (lbegin, _) ->
+                  (* variable was live, so it has to remain so *)
+                  S.enter (lva, op, (lbegin, idx + 1))
+              | None -> lva)
           | _ -> failwith "unreachable"
         in
         List.fold_left fold (def lva d) ops
@@ -142,3 +146,58 @@ l:
   S.equal
     ( lva_of_cfg (entry, [ (S.symbol "l", exit) ]),
       S.table_of_list [ ("a", (1, 5)); ("b", (2, 5)); ("c", (5, 6)) ] )
+
+let%test "lva_of_cfg4" =
+  (*
+    br e
+e:
+    a0 = 10 + 0
+    br l
+l:
+    a1 = phi a0, a2
+    a2 = a1 - 1
+    cbr a2, l, f
+f:
+    ret a2
+    *)
+  let entry0 : Ll.block = { insns = []; terminator = Br (S.symbol "e") } in
+  let entry1 : Ll.block =
+    {
+      insns =
+        [ (Some (S.symbol "a0"), Binop (Add, I32, IConst32 42l, IConst32 27l)) ];
+      terminator = Br (S.symbol "l");
+    }
+  in
+  let loop : Ll.block =
+    {
+      insns =
+        [
+          ( Some (S.symbol "a1"),
+            PhiNode
+              ( I32,
+                [
+                  (Id (S.symbol "a0"), S.symbol "e");
+                  (Id (S.symbol "a2"), S.symbol "l");
+                ] ) );
+          ( Some (S.symbol "a2"),
+            Binop (Sub, I32, Id (S.symbol "a1"), IConst32 1l) );
+        ];
+      terminator = Cbr (Id (S.symbol "a2"), S.symbol "l", S.symbol "f");
+    }
+  in
+  let exit : Ll.block =
+    { insns = []; terminator = Ret (I32, Some (Id (S.symbol "a2"))) }
+  in
+  (*Printf.printf "%s"
+    (S.string_of_table S.print_pair
+       (lva_of_cfg
+          ( entry0,
+            [
+              (S.symbol "e", entry1); (S.symbol "l", loop); (S.symbol "f", exit);
+            ] )));*)
+  S.equal
+    ( lva_of_cfg
+        ( entry0,
+          [ (S.symbol "e", entry1); (S.symbol "l", loop); (S.symbol "f", exit) ]
+        ),
+      S.table_of_list [ ("a0", (3, 6)); ("a1", (6, 7)); ("a2", (7, 10)) ] )
