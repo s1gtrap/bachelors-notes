@@ -30,5 +30,10 @@ let llvmparse file =
   parseRes
 
 let () =
-  let prog = llvmparse Sys.argv.(1) in
-  Printf.printf "%s" (Ll.string_of_prog prog)
+  let { fdecls; _ } : Ll.prog = llvmparse Sys.argv.(1) in
+  List.iter
+    (fun (gid, fdecl) ->
+      Printf.printf "%s" (Ll.string_of_named_fdecl (gid, fdecl));
+      let lva = Lva.lva_of_fdecl fdecl in
+      Printf.printf "%s" (Symbol.string_of_table Symbol.print_pair lva))
+    fdecls

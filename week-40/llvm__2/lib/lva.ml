@@ -11,6 +11,10 @@ let lva_of_insn lva idx insn =
   let l =
     match insn with
     | d, Ll.Binop (_, _, a, b) -> ((def lva d |> use) a |> use) b
+    | d, Ll.Alloca _ -> def lva d
+    | None, Ll.Store (_, v, p) -> use (use lva p) v
+    | d, Ll.Gep (_, head, tail) ->
+        List.fold_left use (use (def lva d) head) tail
     | d, Ll.PhiNode (_, ops) ->
         let fold lva = function
           | Ll.Id op, _ -> (
@@ -37,9 +41,9 @@ let%test "lva_of_insn0" =
   S.equal (l, S.table_of_list [ ("a", (1, -1)) ]) && o == 1
 
 let lva_of_term lva idx = function
-  | Ll.Ret (_, None) -> (lva, idx + 1)
   | Ll.Ret (_, Some (Id s)) ->
       (S.enter (lva, s, (fst (Option.get (S.look (lva, s))), idx + 1)), idx + 1)
+  | Ll.Ret (_, _) -> (lva, idx + 1)
   | Ll.Br _ -> (lva, idx + 1)
   | Ll.Cbr (Id cnd, _, _) ->
       ( S.enter (lva, cnd, (fst (Option.get (S.look (lva, cnd))), idx + 1)),
