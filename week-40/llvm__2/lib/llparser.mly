@@ -10,7 +10,7 @@
 %token EQ NE SLT SLE SGT SGE
 %token AND OR XOR SHL LSHR ASHR
 %token RET BR TO NULL LABEL ENTRY GLOBAL DEFINE
-%token CALL ICMP LOAD STORE ALLOCA BITCAST GEP PTRTOINT
+%token CALL ICMP LOAD STORE ALLOCA BITCAST GEP ZEXT PTRTOINT
 
 %token <int> INT        (* int64 values *)
 %token <Symbol.symbol> LBL   (* labels *)
@@ -154,6 +154,8 @@ insn:
     { Bitcast (t1,o,t2) }
   | GEP t=ty COMMA path=gep_path
     { Gep (t, List.hd path, List.tl path) }
+  | ZEXT t1=ty o=operand TO t2=ty
+     { Zext (t1,o,t2) }
   | PTRTOINT t1=ty STAR o=operand TO t2=ty
     { Ptrtoint (t1,o,t2) }
 
