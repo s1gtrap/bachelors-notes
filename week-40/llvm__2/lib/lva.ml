@@ -277,3 +277,18 @@ int add(a, b):
   S.equal
     ( lva_of_fdecl fdecl,
       S.table_of_list [ ("a", (0, 1)); ("b", (0, 1)); ("c", (1, 2)) ] )
+
+let graph_of_lva (lva : lva) : Graph.graph =
+  let diffsof i ((_, (b1, e1)) : S.symbol * _) =
+    List.filteri
+      (fun j ((_, (b2, e2)) : S.symbol * (int * int)) ->
+        i < j && b1 <= e2 && b2 <= e1)
+      (S.ST.bindings lva)
+  in
+  let diffs : ((S.symbol * (int * int)) * (S.symbol * (int * int)) list) list =
+    List.mapi (fun i e -> (e, diffsof i e)) (S.ST.bindings lva)
+  in
+  List.fold_left
+    (fun g ((k, _), e) ->
+      List.fold_left (fun g (e, _) -> Graph.add_edge (g, k, e)) g e)
+    Graph.empty diffs
