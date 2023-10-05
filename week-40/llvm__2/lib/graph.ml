@@ -33,7 +33,7 @@ module Z = Set.Make (struct
   type t = Symbol.symbol * Symbol.symbol
 
   let compare ((_, n1), (_, m1)) ((_, n2), (_, m2)) =
-    compare n1 n2 * compare n1 m2 * compare m1 n2
+    compare n1 m2 * compare m1 n2
 end)
 
 let to_string (g : S.t Symbol.table) =
