@@ -29,17 +29,27 @@ let%test "add_edge should add a bidirectional edge for (k, v)" =
       (Symbol.symbol "b", [ Symbol.symbol "a" ]);
     ]
 
+module Z = Set.Make (struct
+  type t = Symbol.symbol * Symbol.symbol
+
+  let compare ((_, n1), (_, m1)) ((_, n2), (_, m2)) =
+    compare n1 n2 * compare n1 m2 * compare m1 n2
+end)
+
 let to_string (g : S.t Symbol.table) =
+  let edges =
+    List.fold_left
+      (fun (a : Z.t) ((k, e) : Symbol.symbol * _) ->
+        List.fold_left (fun (a : Z.t) e -> Z.add (k, e) a) a (S.elements e))
+      Z.empty (Symbol.ST.bindings g)
+  in
   "graph {\n"
   ^ List.fold_left
       (fun a (k, _) -> a ^ "  \"" ^ Symbol.name k ^ "\"\n")
       "" (Symbol.ST.bindings g)
   ^ "\n"
-  ^ List.fold_left
-      (fun (a : string) ((k, e) : Symbol.symbol * _) ->
-        List.fold_left
-          (fun (a : string) e ->
-            a ^ "  \"" ^ Symbol.name k ^ "\" -- \"" ^ Symbol.name e ^ "\"\n")
-          a (S.elements e))
-      "" (Symbol.ST.bindings g)
+  ^ Z.fold
+      (fun ((k, v) : Symbol.symbol * Symbol.symbol) (a : string) ->
+        a ^ "  \"" ^ Symbol.name k ^ "\" -- \"" ^ Symbol.name v ^ "\"\n")
+      edges ""
   ^ "}"
