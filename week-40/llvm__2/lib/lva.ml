@@ -13,7 +13,9 @@ let lva_of_insn lva idx insn =
     | d, Ll.Binop (_, _, a, b) -> ((def lva d |> use) a |> use) b
     | d, Alloca _ -> def lva d
     | d, Load (_, a) -> use (def lva d) a
-    | _, Store (_, v, p) -> use (use lva p) v (* FIXME: okay to ignore lhs? *)
+    | None, Store (_, v, p) ->
+        use (use lva p) v (* FIXME: okay to ignore lhs? *)
+    | Some _, Store _ -> failwith "illegal"
     | d, Icmp (_, _, a, b) -> ((def lva d |> use) a |> use) b
     | d, Call (_ty, _name, args) ->
         List.fold_left use (def lva d) (List.map snd args)
