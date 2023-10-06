@@ -9,7 +9,7 @@ type graph = S.t Symbol.table
 let empty = Symbol.empty
 
 let%test "empty should return a new map with zero entries" =
-  Symbol.ST.cardinal empty == 0
+  Symbol.ST.cardinal empty = 0
 
 let bindings t =
   List.map (fun (k, s) -> (k, S.elements s)) (Symbol.ST.bindings t)

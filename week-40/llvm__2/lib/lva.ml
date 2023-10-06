@@ -46,7 +46,7 @@ let%test "lva_of_insn0" =
     (Some (S.symbol "a"), Ll.Binop (Add, I32, IConst32 1l, IConst32 2l))
   in
   let l, o = lva_of_insn S.empty 0 insn in
-  S.equal (l, S.table_of_list [ ("a", (1, -1)) ]) && o == 1
+  S.equal (l, S.table_of_list [ ("a", (1, -1)) ]) && o = 1
 
 let lva_of_term lva idx = function
   | Ll.Ret (_, Some (Id s)) ->
@@ -65,7 +65,7 @@ let%test "lva_of_term0" =
     *)
   let term = Ll.Ret (I32, Some (Id (S.symbol "a"))) in
   let l, o = lva_of_term (S.table_of_list [ ("a", (1, -1)) ]) 1 term in
-  S.equal (l, S.table_of_list [ ("a", (1, 2)) ]) && o == 2
+  S.equal (l, S.table_of_list [ ("a", (1, 2)) ]) && o = 2
 
 let%test "lva_of_term1" =
   (*
@@ -73,7 +73,7 @@ let%test "lva_of_term1" =
     *)
   let term = Ll.Cbr (Ll.Id (S.symbol "a"), S.symbol "b", S.symbol "c") in
   let lva, off = lva_of_term (S.table_of_list [ ("a", (1, -1)) ]) 1 term in
-  S.equal (lva, S.table_of_list [ ("a", (1, 2)) ]) && off == 2
+  S.equal (lva, S.table_of_list [ ("a", (1, 2)) ]) && off = 2
 
 let lva_of_block lva idx ({ insns; terminator } : Ll.block) =
   let fold (lva, idx) insn = lva_of_insn lva idx insn in
@@ -86,7 +86,7 @@ let%test "lva_of_block0" =
     *)
   let blk : Ll.block = { insns = []; terminator = Ret (Void, None) } in
   let l, o = lva_of_block S.empty 0 blk in
-  S.equal (l, S.table_of_list []) && o == 1
+  S.equal (l, S.table_of_list []) && o = 1
 
 let%test "lva_of_block1" =
   (*
@@ -101,7 +101,7 @@ let%test "lva_of_block1" =
     }
   in
   let l, o = lva_of_block S.empty 0 blk in
-  S.equal (l, S.table_of_list [ ("a", (1, 2)) ]) && o == 2
+  S.equal (l, S.table_of_list [ ("a", (1, 2)) ]) && o = 2
 
 let lva_of_cfg lva (head, tail) =
   let lva, off = lva_of_block lva 0 head in
