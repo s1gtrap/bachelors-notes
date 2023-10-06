@@ -95,7 +95,7 @@ ty:
   | VOID            { Void }
   | I1              { I1 }
   | I8              { I8 }
-  | I32             { I64 }
+  | I32             { I32 }
   | I64             { I64 }
   | LBRACE ts=ty_list RBRACE
     { Struct ts }
