@@ -72,6 +72,7 @@ rule token = parse
   | "define"           { DEFINE }
   | "alloca"           { ALLOCA }
   | "bitcast"          { BITCAST }
+  | "phi"              { PHI }
   | '%' (idchar+ as i) { UID (S.symbol i) }
   | '@' (idchar+ as i) { GID (S.symbol i) }
   | "x"                           { CROSS } (* for Array types *)

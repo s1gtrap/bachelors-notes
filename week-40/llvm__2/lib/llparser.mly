@@ -10,7 +10,7 @@
 %token EQ NE SLT SLE SGT SGE
 %token AND OR XOR SHL LSHR ASHR
 %token RET BR TO NULL LABEL ENTRY GLOBAL DEFINE
-%token CALL ICMP LOAD STORE ALLOCA BITCAST GEP ZEXT PTRTOINT
+%token CALL ICMP LOAD STORE ALLOCA BITCAST GEP ZEXT PTRTOINT PHI
 
 %token <int> INT        (* int64 values *)
 %token <Symbol.symbol> LBL   (* labels *)
@@ -137,6 +137,9 @@ named_insn:
 | u_opt=terminated(UID,EQUALS)? i=insn
   { u_opt, i }
 
+bracket:
+  | LBRACKET op=UID COMMA lbl=UID RBRACKET { (Id op, lbl) }
+
 insn:
   | b=bop t=ty o1=operand COMMA o2=operand
     { Binop (b,t,o1,o2) }
@@ -158,6 +161,8 @@ insn:
      { Zext (t1,o,t2) }
   | PTRTOINT t1=ty STAR o=operand TO t2=ty
     { Ptrtoint (t1,o,t2) }
+  | PHI t=ty ops=separated_list(COMMA,bracket)
+    { PhiNode (t,ops) }
 
 ty_ginit_list:
   | gs=separated_list(COMMA,typed(ginit))
